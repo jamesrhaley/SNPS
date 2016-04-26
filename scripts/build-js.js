@@ -16813,7 +16813,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var BASE_LOW = exports.BASE_LOW = 1;
-var BASE_HIGH = exports.BASE_HIGH = 20000;
+var BASE_HIGH = exports.BASE_HIGH = 18500;
 
 },{}],64:[function(require,module,exports){
 'use strict';
@@ -16833,13 +16833,13 @@ var _rx = require('rx');
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-// d3.selection.prototype.do = function(callback) {
-//   if (!arguments.length){
-//     var group = this;
-//     callback.apply(undefined, group);
-//   }
-//   return this;
-// };
+d3.selection.prototype.do = function (callback) {
+  if (!arguments.length) {
+    var group = this;
+    callback.apply(undefined, group);
+  }
+  return this;
+};
 
 // d3.selection.prototype.returnByGroup = function() {};
 
@@ -16935,13 +16935,14 @@ var _inputFilter = require('./inputFilter');
 
 var _theTip = require('./theTip');
 
+var _sideLabel = require('./sideLabel');
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-// import { Sankey } from './sankey/Sankey';
-
+var dimensions = gz.dimensions;
 // import { resetButton$ } from './resetButton';
 // © 2016 James Haley for licencing contact at james.r.haley@gmail.com
-var dimensions = gz.dimensions;
+
 var blankSVG = gz.blankSVG;
 var draw = gz.default.draw;
 
@@ -16959,7 +16960,6 @@ var FILE = "geneData.csv";
 
 //------------------------------------------------------------
 
-function modelData(dataStream, flatten) {}
 // const emptySet = d3local.select("body")
 //     .append("div")
 //     .attr('class','backgroud')
@@ -16982,16 +16982,68 @@ var x = d3.scale.ordinal().rangeRoundBands([0, SIZE.width], .1);
 
 var y = d3.scale.linear().range([SIZE.height, 0]);
 
-var color = d3.scale.category20b();
+var color = d3.scale.category20();
 
 var xAxis = d3.svg.axis().scale(x).orient("bottom");
 
 var yAxis = d3.svg.axis().scale(y).orient("left");
 
-function asNumber(x) {
-  return isNaN(+x) ? 0 : +x;
+var TRANSITION_TIME = 100;
+
+var axisStart = true;
+
+var legendStart = true;
+
+function axis(selection) {
+  selection.transition().duration(TRANSITION_TIME).select(".y.axis").call(yAxis);
+
+  // selection.transition()
+  //     .duration(TRANSITION_TIME)
+  //     .select(".x.axis")
+  //     .call(xAxis)
+
+  if (axisStart) {
+    axisStart = false;
+    // selection.append("g")
+    //     .attr("class", "x axis")
+    //     .attr("transform", "translate(0," + SIZE.height + ")")
+    //     .call(xAxis)
+    //   .selectAll("text") 
+    //   .style("text-anchor", "end")
+    //   .attr("dx", "-.8em")
+    //   .attr("dy", ".15em")
+    //   .style('font-size', '8px')
+    //   .attr("transform", function(d) {
+    //       return "rotate(-65)"
+    //   });
+
+    selection.append("g").attr("class", "y axis").call(yAxis).append("text").attr({
+      "class": "label",
+      "transform": "rotate(-90)",
+      "y": -66,
+      "x": -SIZE.height / 2,
+      "dy": ".71em"
+    }).style("text-anchor", "middle").text("P-Value mlog");
+  }
 }
-function scater(data) {
+
+function legend(selection, colorSelection) {
+  if (legendStart) {
+    legendStart = false;
+    var legend = selection.selectAll(".legend").data(colorSelection.domain()).enter().append("g").attr("class", "legend").attr("transform", function (d, i) {
+      return "translate(0," + i * 20 + ")";
+    });
+
+    legend.append("rect").attr("x", SIZE.width).attr("width", 10).attr("height", 10).style("fill", colorSelection);
+
+    legend.append("text").attr("x", SIZE.width + 12).attr("y", 5).attr("dy", ".35em").style("text-anchor", "start").style('font-size', '12px').text(function (d) {
+      return d.replace(/_/g, ' ').capitalizeFirstLetter();
+    });
+  }
+}
+svg.append('svg:text').attr("y", SIZE.height).attr("x", SIZE.width).attr("dy", ".35em").style("text-anchor", "start").style('font-size', '12px').append('svg:tspan').attr("x", SIZE.width).attr('dy', 0).text('*Circle radius represents:').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('Odds Ratio & Beta Ceof').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('**Click circles for more info');
+
+function scatter(data) {
 
   x.domain(data.map(function (d) {
     return d.CONTEXT;
@@ -17000,44 +17052,9 @@ function scater(data) {
     return d.PVALUE_MLOG;
   })).nice();
 
-  // svg.append("g")
-  //     .attr("class", "x axis")
-  //     .attr("transform", "translate(0," + SIZE.height + ")")
-  //     .call(xAxis)
-  //   .selectAll("text") 
-  //   .style("text-anchor", "end")
-  //   .attr("dx", "-.8em")
-  //   .attr("dy", ".15em")
-  //   .style('font-size', '8px')
-  //   .attr("transform", function(d) {
-  //       return "rotate(-65)"
-  //   });
-
-  // svg.append("g")
-  //     .attr("class", "y axis")
-  //     .call(yAxis)
-  //   .append("text")
-  //     .attr({
-  //       "class": "label",
-  //       "transform": "rotate(-90)",
-  //       "y": -66,
-  //       "x": -SIZE.height/2,
-  //       "dy": ".71em"
-  //     })
-  //     .style("text-anchor", "middle")
-  //     .text("P-Value mlog")
-
   (0, _shapes.makeCircles)(svg, { x: x, y: y, color: color }, data);
-
-  var legend = svg.selectAll(".legend").data(color.domain()).enter().append("g").attr("class", "legend").attr("transform", function (d, i) {
-    return "translate(0," + i * 20 + ")";
-  });
-
-  legend.append("rect").attr("x", SIZE.width).attr("width", 10).attr("height", 10).style("fill", color);
-
-  legend.append("text").attr("x", SIZE.width + 12).attr("y", 5).attr("dy", ".35em").style("text-anchor", "start").style('font-size', '12px').text(function (d) {
-    return d.replace(/_/g, ' ').capitalizeFirstLetter();
-  });
+  axis(svg);
+  legend(svg, color);
 }
 
 //interaction---------------------------------------------------
@@ -17045,6 +17062,12 @@ function scater(data) {
 
 var counter = 0;
 
+function asNumber(x) {
+  return isNaN(+x) ? 0 : +x;
+}
+function isReported(x) {
+  return x.length !== 0 ? x : 'Not reported';
+}
 function newID() {
   return 'id' + ++counter;
 }
@@ -17066,49 +17089,22 @@ var request$ = Observable.create(function (observer) {
       DISEASE_TRAIT: d.DISEASE_TRAIT,
       PVALUE_MLOG: asNumber(d.PVALUE_MLOG),
       REGION: d.REGION,
+      CHR_ID: d.CHR_ID,
+      CHR_POS: d.CHR_POS,
       STUDY: d.STUDY,
       MAPPED_GENE: d.MAPPED_GENE,
       P_VALUE: +d.P_VALUE,
       SNPS: d.SNPS,
       MAPPED_TRAIT: d.MAPPED_TRAIT,
+      MAPPED_TRAIT_URI: d.MAPPED_TRAIT_URI,
       SNP_ID_CURRENT: +d.SNP_ID_CURRENT,
       OR_or_BETA: +d.OR_or_BETA,
-      CONTEXT: d.CONTEXT,
+      CONTEXT: isReported(d.CONTEXT),
+      LINK: d.LINK,
       ID: newID()
     };
   });
 });
-
-//flatten----------------------------------------------------
-// var flattenState = 6
-// const flattenButton = pick('.flatten')
-// const flatten$ = Observable.fromEvent(flattenButton, 'click')
-//     .map(()=> {
-//         if (flattenState === 6 ){
-//             flattenState = 0;
-//             return flattenState;
-//         } else if (flattenState === 0 ) {
-//             flattenState = 6;
-//             return flattenState;          
-//         }
-//     })
-//     .startWith(6)
-
-//base constants----------------------------------------------------
-// const BASE_LOW = 2000;
-// const BASE_HIGH = 5000;
-
-// const BASE_SLIDER_INPUT = {
-//     low:BASE_LOW,
-//     high:BASE_HIGH
-// };
-
-// const BASE_MOUSEDOWN_INPUT = {
-//     node : null,
-//     value : null
-// }
-
-// const BASE_SELECTION = [BASE_SLIDER_INPUT, BASE_MOUSEDOWN_INPUT]
 
 //slider------------------------------------------------------------
 //code in inputFilter.js
@@ -17120,66 +17116,6 @@ var sliderState$ = _inputFilter.inputFilter.sinks.DOM.source.debounce(250).map(f
   };
 });
 
-// //mouse-------------------------------------------------------------
-// const unMouseDown = pick('.unMouseDown')
-// const mouseClick = getChart;
-
-// const unMouseDown$ = Observable.fromEvent(unMouseDown, 'click')
-//     .map(evt=> {
-//         return {
-//             type: 'mouse',
-//             node : null,
-//             value : null
-//         }
-//     });
-
-// const mousedown$ = Observable.fromEvent(
-//         mouseClick, 'mousedown',
-//         (evt) => evt.target.closest('rect')
-//             || evt.target.closest('path')
-//             || null
-//     )
-//     .startWith(null)
-//     .map(mouse => {
-//         let node = mouse === null ? null : mouse.nodeName;
-//         let value = mouse === null ? null : d3local.select(mouse).datum();
-//         return {
-//             type: 'mouse',
-//             node : node,
-//             value : value
-//         }
-//     });
-
-// const mouseState$ = mousedown$.merge(unMouseDown$)
-
-// //merge interactions------------------------------------------------
-// const update$ = Rx.Observable.merge(
-//     sliderState$, mouseState$, resetButton$
-// )
-
-// // Scan over these updates to modify the high/low values
-// const interaction$ = update$.scan((state, update) => {
-//     if (update.type === 'slider') {
-//         state[0].low = update.low;
-//         state[0].high = update.high
-
-//     } else if (update.type === 'mouse') {
-//         state[1].node = update.node;
-//         state[1].value = update.value
-
-//     } else if (update.type === 'reset') {
-//         state[0].low = BASE_LOW;
-//         state[0].high = BASE_HIGH;
-//         state[1].node = null;
-//         state[1].value = null;
-
-//     }
-//     return state;
-// }, BASE_SELECTION);
-
-//sideffects---------------------------------------------------------
-
-(0, _theTip.callTip)();
 var filertedResult$ = Observable.combineLatest(sliderState$, request$, function (state, request) {
   var results = request.map(function (each) {
     return each;
@@ -17190,11 +17126,16 @@ var filertedResult$ = Observable.combineLatest(sliderState$, request$, function 
   return results;
 });
 
+//sideffects---------------------------------------------------------
+
+(0, _theTip.callTip)();
+(0, _sideLabel.callLabel)();
+
 filertedResult$.subscribe(function (x) {
-  return scater(x);
+  return scatter(x);
 });
 
-},{"./helpers/sharedResource":64,"./inputFilter":66,"./shapes/shapes":68,"./theTip":69,"grizzy":16,"rx":24}],66:[function(require,module,exports){
+},{"./helpers/sharedResource":64,"./inputFilter":66,"./shapes/shapes":68,"./sideLabel":69,"./theTip":70,"grizzy":16,"rx":24}],66:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -17215,6 +17156,9 @@ var _resetButton = require('./resetButton');
 var _constants = require('./constants');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var BASE_DISTANCE = 1000; // © 2016 James Haley for licencing contact at james.r.haley@gmail.com
+
 
 function intent(DOM) {
   var mapAndStamp = function mapAndStamp(from, type, bounce) {
@@ -17237,8 +17181,7 @@ function intent(DOM) {
   var changehigh$ = _rx.Observable.merge(slidehigh$, inputhigh$);
 
   return { changelow$: changelow$, changehigh$: changehigh$ };
-} // © 2016 James Haley for licencing contact at james.r.haley@gmail.com
-
+}
 
 var mapExternalWithTime = function mapExternalWithTime(from, baseValue) {
   return from.map(function (ev) {
@@ -17264,13 +17207,13 @@ function model(changelow$, changehigh$, external) {
     var current = high.time > low.time ? 'high' : 'low';
     var range = high.value - low.value;
 
-    if (range <= 0) {
+    if (range <= BASE_DISTANCE) {
       if (current === 'high') {
-        w = h;
-        range = 0;
+        w = +h - BASE_DISTANCE;
+        range = BASE_DISTANCE;
       } else if (current === 'low') {
-        h = w;
-        range = 0;
+        h = +w + BASE_DISTANCE;
+        range = BASE_DISTANCE;
       }
     }
     return { range: range, low: w, high: h };
@@ -17279,17 +17222,17 @@ function model(changelow$, changehigh$, external) {
 
 function view(state$) {
   return state$.map(function (state) {
-    return (0, _dom.div)([(0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS low: '), (0, _dom.input)('.lowSlider', {
+    return (0, _dom.div)([(0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS ID higher than:'), (0, _dom.input)('.lowInput', { value: state.low }), (0, _dom.input)('.lowSlider', {
       type: 'range',
       min: 1,
-      max: 19999,
+      max: 18499,
       value: state.low
-    }), (0, _dom.input)('.lowInput', { value: state.low })]), (0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS High:'), (0, _dom.input)('.highSlider', {
+    })]), (0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS ID lower than: '), (0, _dom.input)('.highInput', { value: state.high }), (0, _dom.input)('.highSlider', {
       type: 'range',
       min: 2,
-      max: 20000,
+      max: 18500,
       value: state.high
-    }), (0, _dom.input)('.highInput', { value: state.high })]), (0, _dom.h4)('.rangePhrase', 'Range of SNPS is ' + state.low + ' to ' + state.high)
+    })]), (0, _dom.h4)('.rangePhrase', 'Range of SNPS IDS is from ' + state.low + ' to ' + state.high)
     //p('Edges consist of groups of people and links represent those edges as students transition from college to career.')
     ]);
   });
@@ -17400,7 +17343,9 @@ function makeCircles(parentObject, helpers, data) {
         });
       },
       enter: function enter(selection) {
-        return selection.enter().append("circle").transition().delay(delay).attr({
+        return selection.enter().append("circle").style("fill", function (d) {
+          return helpers.color(d.CONTEXT);
+        }).transition('enter').delay(delay).attr({
           "class": "dot",
           "r": function r(d) {
             var rad = d.OR_or_BETA * 1.5;
@@ -17412,14 +17357,11 @@ function makeCircles(parentObject, helpers, data) {
           "cy": function cy(d) {
             return helpers.y(d.PVALUE_MLOG);
           }
-        }).style("fill", function (d) {
-          return helpers.color(d.CONTEXT);
         }).sort(function (a, b) {
           return b.dy - a.dy;
         });
       },
       exit: function exit(selection) {
-        console.log(selection);
         return selection.exit().remove();
       }
     }
@@ -17429,6 +17371,75 @@ function makeCircles(parentObject, helpers, data) {
 exports.makeCircles = makeCircles;
 
 },{"../helpers/sharedResource":64,"grizzy":16}],69:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.callLabel = undefined;
+
+var _sharedResource = require('./helpers/sharedResource');
+
+var _rx = require('rx');
+
+var mouseClick = (0, _sharedResource.pick)('#chart');
+var mousedown$ = _rx.Observable.fromEvent(mouseClick, 'mousedown', function (evt) {
+    return evt.target.closest('.dot') || null;
+}).startWith(null).map(function (mouse) {
+    var node = mouse === null ? null : mouse.nodeName;
+    var value = mouse === null ? null : _sharedResource.d3local.select(mouse).datum();
+    return {
+        type: 'mouse',
+        node: node,
+        value: value
+    };
+});
+
+var largeLable = _sharedResource.d3local.select("body").append("div").attr('class', 'largeLable').style("position", "absolute");
+
+function lableText(object) {
+    return '<span><span class="header">SNP: </span><br>' + object.SNPS + "<br>" + '<span class="header">CURRENT SNP ID: </span><br>' + object.SNP_ID_CURRENT + "<br><br>" + '<span class="header">STUDY: </span><br>' + object.STUDY.capitalizeFirstLetter() + "<br>" + ('<a target="_blank" href="http://' + object.LINK + '">link</a><br>') + "<br>" + '<span class="header">DISEASE TRAIT: </span><br>' + object.DISEASE_TRAIT + "<br><br>" + '<span class="header">REGION: </span><br>' + object.REGION + "<br>" + '<span class="header">CHR ID: </span><br>' + object.CHR_ID + "<br>" + '<span class="header">CHR POS: </span><br>' + object.CHR_POS + "<br>" + '<span class="header">MAPPED GENE: </span><br>' + object.MAPPED_GENE + "<br>" + '<span class="header">MAPPED TRAIT: </span><br>' + object.MAPPED_TRAIT + "<br>" + ('<a target="_blank" href="' + object.MAPPED_TRAIT_URI + '">link</a><br>') + "<br>" + '<span class="header">P VALUE & MLOG: </span><br>' + (object.P_VALUE + ', ' + object.PVALUE_MLOG.toFixed(2)) + "<br>" + '<span class="header">ODDS RATIO or BETA Coef: </span><br>' + object.OR_or_BETA + "<br>" + '<span class="header">CONTEXT: </span><br>' + object.CONTEXT.replace(/_/g, ' ').capitalizeFirstLetter() + "</span>";
+}
+
+function emptyText() {
+    return '';
+}
+
+function makeLable(mouse$, lable, stringFucs) {
+
+    return function () {
+        return mouse$.subscribe(function (evt) {
+            var string = function string(d) {
+                if (d.node != null) {
+                    return stringFucs.lableText(d.value);
+                } else {
+                    return stringFucs.emptyText();
+                }
+            };
+
+            var getstring = string(evt);
+
+            lable.style({
+                'opacity': function opacity() {
+                    if (getstring === '') {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+                },
+                "top": "100px",
+                "left": "5px"
+            }).html(getstring);
+        });
+    };
+}
+
+var callLabel = exports.callLabel = makeLable(mousedown$, largeLable, {
+    emptyText: emptyText,
+    lableText: lableText
+});
+
+},{"./helpers/sharedResource":64,"rx":24}],70:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -17476,7 +17487,7 @@ var mouseOver$ = _rx.Observable.fromEvent(mouseOver, 'mouseover').map(function (
 }).debounce(100);
 
 function text(object) {
-    return '<span class="header">MAPPED TRAIT:</span>' + "<br>" + object.MAPPED_TRAIT + "<br>" + "<span class='snps'>SNP: " + object.SNPS + "</span>" + "<br>" + "<span class='study'>STUDY:<br>" + object.STUDY.capitalizeFirstLetter() + "</span>";
+    return '<span class="header">MAPPED TRAIT:</span>' + "<br>" + object.MAPPED_TRAIT + "<br>" + "<span class='snps'>SNP: " + object.SNPS + "</span>" + "<br>" + "<span class='study'>STUDY:<br>" + object.STUDY.capitalizeFirstLetter() + "</span>" + "<br>" + "<span class='fineprint'>" + 'click for more info' + "</span>";
 }
 
 function emptyText(object) {

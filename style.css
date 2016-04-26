@@ -110,10 +110,13 @@ input[type=range]::-ms-thumb {
 }
 input[type=range]:focus::-ms-fill-lower {
     background: #888;
+    outline: none;
 }
 input[type=range]:focus::-ms-fill-upper {
     background: #ccc;
+    outline: none;
 }
+
 #controls {
     display: inline-block;
     width: 500px;
@@ -191,6 +194,7 @@ button:focus {
 .filterbox {
     margin-bottom: 5px;
     margin-top: 5px;
+    width: 550px;
 }
 
 /*tooltip styles*/

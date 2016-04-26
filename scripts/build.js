@@ -17351,7 +17351,7 @@ function makeCircles(parentObject, helpers, data) {
             return helpers.y(d.PVALUE_MLOG);
           }
         }).sort(function (a, b) {
-          return b.dy - a.dy;
+          return a.OR_or_BETA - b.OR_or_BETA;
         });
       },
       enter: function enter(selection) {
@@ -17369,7 +17369,7 @@ function makeCircles(parentObject, helpers, data) {
             return helpers.y(d.PVALUE_MLOG);
           }
         }).sort(function (a, b) {
-          return b.dy - a.dy;
+          return a.OR_or_BETA - b.OR_or_BETA;
         });
       },
       exit: function exit(selection) {

@@ -17041,7 +17041,7 @@ function legend(selection, colorSelection) {
     });
   }
 }
-svg.append('svg:text').attr("y", SIZE.height).attr("x", SIZE.width).attr("dy", ".35em").style("text-anchor", "start").style('font-size', '12px').append('svg:tspan').attr("x", SIZE.width).attr('dy', 0).text('*Circle radius represents:').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('Odds Ratio & Beta Ceof').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('**Click circles for more info');
+svg.append('svg:text').attr("y", SIZE.height).attr("x", SIZE.width).attr("dy", ".35em").style("text-anchor", "start").style('font-size', '12px').append('svg:tspan').attr("x", SIZE.width).attr('dy', 0).text('*Circle radius represents:').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('Odds ratio or Beta Coef').append('svg:tspan').attr("x", SIZE.width).attr('dy', 15).text('**Click circles for more info');
 
 function scatter(data) {
 
@@ -17057,8 +17057,20 @@ function scatter(data) {
   legend(svg, color);
 }
 
+var interpolateNumber = function interpolateNumber(a, b) {
+  a = +a, b = +b;
+  return function (t) {
+    return a * (1.0 - t) + b * t;
+  };
+};
+var ranged = interpolateNumber(1, 1.95);
 //interaction---------------------------------------------------
 // run program and observe async events
+
+var sizeFunc = function sizeFunc(d) {
+  var rad = d * 1.5;
+  return rad >= 1.5 ? rad : 1.5;
+};
 
 var counter = 0;
 
@@ -17101,7 +17113,8 @@ var request$ = Observable.create(function (observer) {
       OR_or_BETA: +d.OR_or_BETA,
       CONTEXT: isReported(d.CONTEXT),
       LINK: d.LINK,
-      ID: newID()
+      ID: newID(),
+      RADIUS: sizeFunc(+d.OR_or_BETA)
     };
   });
 });
@@ -17222,17 +17235,17 @@ function model(changelow$, changehigh$, external) {
 
 function view(state$) {
   return state$.map(function (state) {
-    return (0, _dom.div)([(0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS ID higher than:'), (0, _dom.input)('.lowInput', { value: state.low }), (0, _dom.input)('.lowSlider', {
+    return (0, _dom.div)([(0, _dom.div)('.filterbox', [(0, _dom.label)('SNPs ID higher than:'), (0, _dom.input)('.lowInput', { value: state.low }), (0, _dom.input)('.lowSlider', {
       type: 'range',
       min: 1,
       max: 18499,
       value: state.low
-    })]), (0, _dom.div)('.filterbox', [(0, _dom.label)('SNPS ID lower than: '), (0, _dom.input)('.highInput', { value: state.high }), (0, _dom.input)('.highSlider', {
+    })]), (0, _dom.div)('.filterbox', [(0, _dom.label)('SNPs ID lower than: '), (0, _dom.input)('.highInput', { value: state.high }), (0, _dom.input)('.highSlider', {
       type: 'range',
       min: 2,
       max: 18500,
       value: state.high
-    })]), (0, _dom.h4)('.rangePhrase', 'Range of SNPS IDS is from ' + state.low + ' to ' + state.high)
+    })]), (0, _dom.h4)('.rangePhrase', 'Range of SNPs IDs is from ' + state.low + ' to ' + state.high)
     //p('Edges consist of groups of people and links represent those edges as students transition from college to career.')
     ]);
   });
@@ -17329,8 +17342,7 @@ function makeCircles(parentObject, helpers, data) {
       preUpdate: function preUpdate(selection) {
         return selection.transition().delay(delay).attr({
           "r": function r(d) {
-            var rad = d.OR_or_BETA * 1.5;
-            return rad >= 1.5 ? rad : 1.5;
+            return d.RADIUS;
           },
           "cx": function cx(d) {
             return helpers.x(d.CONTEXT) + 10;
@@ -17348,8 +17360,7 @@ function makeCircles(parentObject, helpers, data) {
         }).transition('enter').delay(delay).attr({
           "class": "dot",
           "r": function r(d) {
-            var rad = d.OR_or_BETA * 1.5;
-            return rad >= 1.5 ? rad : 1.5;
+            return d.RADIUS;
           },
           "cx": function cx(d) {
             return helpers.x(d.CONTEXT) + 10;
@@ -17398,7 +17409,7 @@ var mousedown$ = _rx.Observable.fromEvent(mouseClick, 'mousedown', function (evt
 var largeLable = _sharedResource.d3local.select("body").append("div").attr('class', 'largeLable').style("position", "absolute");
 
 function lableText(object) {
-    return '<span><span class="header">SNP: </span><br>' + object.SNPS + "<br>" + '<span class="header">CURRENT SNP ID: </span><br>' + object.SNP_ID_CURRENT + "<br><br>" + '<span class="header">STUDY: </span><br>' + object.STUDY.capitalizeFirstLetter() + "<br>" + ('<a target="_blank" href="http://' + object.LINK + '">link</a><br>') + "<br>" + '<span class="header">DISEASE TRAIT: </span><br>' + object.DISEASE_TRAIT + "<br><br>" + '<span class="header">REGION: </span><br>' + object.REGION + "<br>" + '<span class="header">CHR ID: </span><br>' + object.CHR_ID + "<br>" + '<span class="header">CHR POS: </span><br>' + object.CHR_POS + "<br>" + '<span class="header">MAPPED GENE: </span><br>' + object.MAPPED_GENE + "<br>" + '<span class="header">MAPPED TRAIT: </span><br>' + object.MAPPED_TRAIT + "<br>" + ('<a target="_blank" href="' + object.MAPPED_TRAIT_URI + '">link</a><br>') + "<br>" + '<span class="header">P VALUE & MLOG: </span><br>' + (object.P_VALUE + ', ' + object.PVALUE_MLOG.toFixed(2)) + "<br>" + '<span class="header">ODDS RATIO or BETA Coef: </span><br>' + object.OR_or_BETA + "<br>" + '<span class="header">CONTEXT: </span><br>' + object.CONTEXT.replace(/_/g, ' ').capitalizeFirstLetter() + "</span>";
+    return '<span><span class="header">SNP: </span><br>' + object.SNPS + "<br>" + '<span class="header">CURRENT SNP ID: </span><br>' + object.SNP_ID_CURRENT + "<br><br>" + '<span class="header">STUDY: </span><br>' + object.STUDY.capitalizeFirstLetter() + "<br>" + ('<a target="_blank" href="http://' + object.LINK + '">link</a><br>') + "<br>" + '<span class="header">DISEASE TRAIT: </span><br>' + object.DISEASE_TRAIT + "<br><br>" + '<span class="header">REGION: </span><br>' + object.REGION + "<br>" + '<span class="header">CHR ID: </span><br>' + object.CHR_ID + "<br>" + '<span class="header">CHR POS: </span><br>' + object.CHR_POS + "<br>" + '<span class="header">MAPPED GENE: </span><br>' + object.MAPPED_GENE + "<br>" + '<span class="header">MAPPED TRAIT: </span><br>' + object.MAPPED_TRAIT + "<br>" + ('<a target="_blank" href="' + object.MAPPED_TRAIT_URI + '">link</a><br>') + "<br>" + '<span class="header">P VALUE & MLOG: </span><br>' + (object.P_VALUE + ', ' + object.PVALUE_MLOG.toFixed(2)) + "<br>" + '<span class="header">ODDS RATIO or BETA Coef: </span><br>' + object.OR_or_BETA + "<br>" + '<span class="header">CONTEXT: </span><br>' + object.CONTEXT.replace(/_/g, ' ').capitalizeFirstLetter() + "</span>" + "<br>" + "<span class='fineprint'>" + 'click graph to close' + "</span>";
 }
 
 function emptyText() {
@@ -17427,7 +17438,7 @@ function makeLable(mouse$, lable, stringFucs) {
                         return 1;
                     }
                 },
-                "top": "100px",
+                "top": "131px",
                 "left": "5px"
             }).html(getstring);
         });
